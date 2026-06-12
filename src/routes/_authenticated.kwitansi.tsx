@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Pencil, Trash2, Loader2, Receipt as ReceiptIcon, Eye, Download, CheckCircle2, FileText, Link as LinkIcon } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Loader2, Receipt as ReceiptIcon, Eye, Download, CheckCircle2, FileText } from "lucide-react";
 import { toast } from "sonner";
 import type { Tables, Database } from "@/integrations/supabase/types";
 import { terbilang } from "@/lib/terbilang";
@@ -23,8 +23,6 @@ import { archivePdf } from "@/lib/archive";
 import { logAudit } from "@/lib/audit";
 
 type Receipt = Tables<"receipts">;
-type Invoice = Tables<"invoices">;
-type Customer = Tables<"customers">;
 type Status = Database["public"]["Enums"]["receipt_status"];
 
 export const Route = createFileRoute("/_authenticated/kwitansi")({
