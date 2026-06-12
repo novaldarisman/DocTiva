@@ -31,6 +31,7 @@ import { buildInvoicePdf, triggerDownload, type InvoiceTemplate } from "@/lib/in
 import { useSettings } from "@/lib/settings";
 import { archivePdf } from "@/lib/archive";
 import { logAudit } from "@/lib/audit";
+import { autoCreateReceiptForInvoice } from "@/lib/auto-receipt";
 
 type Customer = Tables<"customers">;
 type Invoice = Tables<"invoices">;
@@ -188,7 +189,18 @@ function InvoicePage() {
         );
         if (e2) throw e2;
       }
+      const cust = customerById.get(newInv.customer_id);
+      try {
+        await autoCreateReceiptForInvoice({
+          invoice_id: newInv.id,
+          invoice_number: newInv.invoice_number,
+          invoice_date: newInv.invoice_date,
+          customer_name: cust?.nama_perusahaan || cust?.nama_pelanggan || "—",
+          amount: Number(newInv.grand_total),
+        });
+      } catch (e) { console.warn("auto-receipt failed", e); }
       qc.invalidateQueries({ queryKey: ["invoices"] });
+      qc.invalidateQueries({ queryKey: ["receipts"] });
       toast.success(`Invoice diduplikasi: ${newInv.invoice_number}`);
       await logAudit({ entity_type: "invoice", entity_id: newInv.id, entity_label: newInv.invoice_number, action: "duplicate", details: { from: inv.invoice_number } });
     } catch (e) {
