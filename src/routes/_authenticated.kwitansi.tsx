@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Pencil, Trash2, Loader2, Receipt as ReceiptIcon, Eye, Download } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Loader2, Receipt as ReceiptIcon, Eye, Download, CheckCircle2, FileText, Link as LinkIcon } from "lucide-react";
 import { toast } from "sonner";
 import type { Tables, Database } from "@/integrations/supabase/types";
 import { terbilang } from "@/lib/terbilang";
@@ -23,6 +23,8 @@ import { archivePdf } from "@/lib/archive";
 import { logAudit } from "@/lib/audit";
 
 type Receipt = Tables<"receipts">;
+type Invoice = Tables<"invoices">;
+type Customer = Tables<"customers">;
 type Status = Database["public"]["Enums"]["receipt_status"];
 
 export const Route = createFileRoute("/_authenticated/kwitansi")({
@@ -50,6 +52,7 @@ function KwitansiPage() {
   const [editing, setEditing] = useState<Receipt | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [previewId, setPreviewId] = useState<string | null>(null);
+  const [finalizeTarget, setFinalizeTarget] = useState<Receipt | null>(null);
 
   const { data: receipts, isLoading } = useQuery({
     queryKey: ["receipts"],
@@ -83,11 +86,41 @@ function KwitansiPage() {
   const statusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: Status }) => {
       const target = (receipts ?? []).find((r) => r.id === id);
+      if (target?.status === "final" && status === "draft") {
+        throw new Error("Kwitansi Final tidak dapat dikembalikan menjadi Draft");
+      }
       const { error } = await supabase.from("receipts").update({ status }).eq("id", id);
       if (error) throw error;
       await logAudit({ entity_type: "receipt", entity_id: id, entity_label: target?.receipt_number, action: "status_change", details: { status } });
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["receipts"] }); toast.success("Status diperbarui"); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const finalizeMutation = useMutation({
+    mutationFn: async (r: Receipt) => {
+      if (r.status === "final") throw new Error("Sudah final");
+      const { error } = await supabase.from("receipts")
+        .update({ status: "final", finalized_at: new Date().toISOString() }).eq("id", r.id);
+      if (error) throw error;
+      await logAudit({ entity_type: "receipt", entity_id: r.id, entity_label: r.receipt_number, action: "status_change", details: { status: "final", finalized: true } });
+      // generate final PDF without watermark
+      try {
+        const refreshed: Receipt = { ...r, status: "final" };
+        const blob = await buildReceiptPdf({
+          receipt_number: refreshed.receipt_number, receipt_date: refreshed.receipt_date, status: "final",
+          received_from: refreshed.received_from, amount: Number(refreshed.amount),
+          amount_in_words: refreshed.amount_in_words, for_payment: refreshed.for_payment,
+          payment_method: refreshed.payment_method, receiver_name: refreshed.receiver_name, notes: refreshed.notes,
+        }, settings, (settings?.receipt_template as ReceiptTemplate) ?? "modern");
+        await archivePdf({ doc_type: "receipt", doc_number: r.receipt_number, entity_id: r.id, date: r.receipt_date, blob });
+      } catch (e) { console.warn("archive final failed", e); }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["receipts"] });
+      setFinalizeTarget(null);
+      toast.success("Kwitansi difinalisasi");
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -144,6 +177,7 @@ function KwitansiPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nomor</TableHead>
+                <TableHead>Jenis</TableHead>
                 <TableHead>Tanggal</TableHead>
                 <TableHead>Diterima dari</TableHead>
                 <TableHead>Untuk</TableHead>
@@ -155,15 +189,22 @@ function KwitansiPage() {
             <TableBody>
               {filtered.map((r) => {
                 const sm = statusMeta(r.status);
+                const isAuto = r.receipt_type === "otomatis";
+                const isFinal = r.status === "final";
                 return (
                   <TableRow key={r.id}>
                     <TableCell className="font-medium">{r.receipt_number}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className={isAuto ? "bg-blue-100 text-blue-700" : ""}>
+                        {isAuto ? "Otomatis" : "Manual"}
+                      </Badge>
+                    </TableCell>
                     <TableCell className="text-muted-foreground">{fmtDate(r.receipt_date)}</TableCell>
                     <TableCell>{r.received_from}</TableCell>
                     <TableCell className="text-muted-foreground max-w-xs truncate">{r.for_payment}</TableCell>
                     <TableCell className="text-right font-medium">{fmtIDR(Number(r.amount))}</TableCell>
                     <TableCell>
-                      <Select value={r.status} onValueChange={(v) => statusMutation.mutate({ id: r.id, status: v as Status })}>
+                      <Select value={r.status} onValueChange={(v) => statusMutation.mutate({ id: r.id, status: v as Status })} disabled={isFinal}>
                         <SelectTrigger className="h-8 w-[130px] border-0 p-0 [&>svg]:hidden">
                           <Badge className={`${sm.tone} font-normal`} variant="secondary">{sm.label}</Badge>
                         </SelectTrigger>
@@ -173,10 +214,15 @@ function KwitansiPage() {
                       </Select>
                     </TableCell>
                     <TableCell className="text-right">
+                      {!isFinal && r.status !== "dibatalkan" && (
+                        <Button variant="ghost" size="icon" onClick={() => setFinalizeTarget(r)} title="Finalisasi" className="text-emerald-600">
+                          <CheckCircle2 className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button variant="ghost" size="icon" onClick={() => setPreviewId(r.id)} title="Preview"><Eye className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => { setEditing(r); setFormOpen(true); }} title="Edit"><Pencil className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => { setEditing(r); setFormOpen(true); }} title="Edit" disabled={isFinal}><Pencil className="h-4 w-4" /></Button>
                       <Button variant="ghost" size="icon" onClick={() => downloadPdf(r)} title="Download PDF"><Download className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => setDeleteId(r.id)} className="text-destructive hover:text-destructive" title="Hapus"><Trash2 className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => setDeleteId(r.id)} className="text-destructive hover:text-destructive" title="Hapus" disabled={isFinal}><Trash2 className="h-4 w-4" /></Button>
                     </TableCell>
                   </TableRow>
                 );
@@ -202,6 +248,26 @@ function KwitansiPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Batal</AlertDialogCancel>
             <AlertDialogAction onClick={() => deleteId && deleteMutation.mutate(deleteId)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Hapus</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!finalizeTarget} onOpenChange={(o) => !o && setFinalizeTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Finalisasi kwitansi?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Kwitansi <b>{finalizeTarget?.receipt_number}</b> akan ditandai <b>FINAL</b>. Setelah final,
+              kwitansi tidak dapat dikembalikan ke Draft dan tidak dapat diubah.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => finalizeTarget && finalizeMutation.mutate(finalizeTarget)}
+              className="bg-emerald-600 text-white hover:bg-emerald-700">
+              Finalisasi
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
