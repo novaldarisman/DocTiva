@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -389,13 +389,23 @@ function InvoiceFormDialog({
   open: boolean; onClose: () => void; editing: Invoice | null; customers: Customer[];
 }) {
   const qc = useQueryClient();
+  const { data: settings } = useSettings();
   const [customerId, setCustomerId] = useState<string>(editing?.customer_id ?? "");
   const [invoiceDate, setInvoiceDate] = useState<string>(editing?.invoice_date ?? todayISO());
   const [dueDate, setDueDate] = useState<string>(editing?.due_date ?? addDays(todayISO(), 14));
   const [status, setStatus] = useState<Status>(editing?.status ?? "draft");
   const [notes, setNotes] = useState<string>(editing?.notes ?? "");
-  const [items, setItems] = useState<ItemForm[]>([emptyItem()]);
+  const [items, setItems] = useState<ItemForm[]>([emptyItem(settings?.default_tax_percent ?? 11)]);
   const [loadingItems, setLoadingItems] = useState(!!editing);
+
+  // Sync default tax_percent from settings on first load
+  const taxSynced = useRef(false);
+  useEffect(() => {
+    if (!taxSynced.current && settings?.default_tax_percent !== undefined && !editing) {
+      setItems((prev) => prev.map((it) => ({ ...it, tax_percent: settings.default_tax_percent ?? 11 })));
+      taxSynced.current = true;
+    }
+  }, [settings?.default_tax_percent, editing]);
 
   useQuery({
     queryKey: ["invoice_items_form", editing?.id],
@@ -407,7 +417,7 @@ function InvoiceFormDialog({
         description: it.description, qty: Number(it.qty), unit: it.unit ?? "pcs",
         price: Number(it.price), discount_percent: Number(it.discount_percent), tax_percent: Number(it.tax_percent),
       }));
-      setItems(rows.length ? rows : [emptyItem()]);
+      setItems(rows.length ? rows : [emptyItem(settings?.default_tax_percent ?? 11)]);
       setLoadingItems(false);
       return data;
     },
@@ -532,7 +542,7 @@ function InvoiceFormDialog({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-base">Item Invoice</Label>
-                <Button type="button" size="sm" variant="outline" onClick={() => setItems((p) => [...p, emptyItem()])}>
+                <Button type="button" size="sm" variant="outline" onClick={() => setItems((p) => [...p, emptyItem(settings?.default_tax_percent ?? 11)])}>
                   <Plus className="h-4 w-4 mr-1" /> Tambah Item
                 </Button>
               </div>

@@ -73,15 +73,13 @@ function AuthPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100/40 via-slate-50 to-blue-50/60 p-4">
       <div className="w-full max-w-md relative">
         <div className="absolute -inset-8 bg-gradient-to-r from-blue-500/10 via-blue-400/5 to-transparent rounded-3xl blur-3xl" />
-        <div className="flex flex-col items-center gap-2 mb-8">
-          <div className="flex flex-col items-center gap-2">
-            <img src="/logo-doctiva.png" alt="DocTiva" className="h-10 object-contain" onError={(e: any) => { e.target.style.display = "none"; }} />
-                      </div>
+        <div className="flex flex-col items-center gap-1 mb-4">
+          <img src="/logo-doctiva.png" alt="DocTiva" className="h-10 object-contain" onError={(e: any) => { e.target.style.display = "none"; }} />
           <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Smart Digital Administration</span>
         </div>
         <Card className="p-8 shadow-2xl shadow-blue-900/10 border border-white/80 bg-white/70 backdrop-blur-xl rounded-2xl">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold tracking-tight">{mode === "login" ? "Selamat Datang" : "Reset Password"}</h1>
+          <div className="mb-6 text-center">
+            <h1 className="text-3xl font-semibold tracking-tight">{mode === "login" ? "Selamat Datang" : "Reset Password"}</h1>
             <p className="text-sm text-muted-foreground mt-1">{mode === "login" ? "Masuk untuk melanjutkan ke DocTiva" : "Kami akan kirim link reset ke email Anda"}</p>
           </div>
           <form onSubmit={submit} className="space-y-4">

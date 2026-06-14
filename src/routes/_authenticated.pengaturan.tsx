@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -145,7 +146,11 @@ function CompanyTab({ section }: { section: "company" | "pdf" }) {
               <div className="space-y-2"><Label>Telepon</Label><Input value={form.company_phone ?? ""} onChange={(e) => set({ company_phone: e.target.value })} /></div>
               <div className="md:col-span-2 space-y-2"><Label>Alamat</Label><Textarea rows={2} value={form.company_address ?? ""} onChange={(e) => set({ company_address: e.target.value })} /></div>
               <div className="space-y-2"><Label>NPWP</Label><Input value={form.company_npwp ?? ""} onChange={(e) => set({ company_npwp: e.target.value })} /></div>
-              <div className="space-y-2"><Label>PPN Default (%)</Label><Input type="number" min={0} max={100} step="0.01" value={form.default_tax_percent ?? 11} onChange={(e) => set({ default_tax_percent: Number(e.target.value) })} /></div>
+              <div className="flex items-center justify-between rounded-lg border p-3">
+              <div><Label>Status PKP</Label><p className="text-xs text-muted-foreground">Non-PKP: PPN otomatis 0%</p></div>
+              <Switch checked={(form.default_tax_percent ?? 11) > 0} onCheckedChange={(v) => set({ default_tax_percent: v ? 11 : 0 })} />
+            </div>
+            <div className="space-y-2"><Label>PPN Default (%)</Label><Input type="number" min={0} max={100} step="0.01" value={form.default_tax_percent ?? 11} onChange={(e) => set({ default_tax_percent: Number(e.target.value) })} /></div>
             </div>
           </div>
           <div className="border-t pt-5">
