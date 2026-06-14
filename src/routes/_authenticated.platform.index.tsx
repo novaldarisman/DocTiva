@@ -19,7 +19,7 @@ function PlatformDashboard() {
       const results: any = {};
       try { const r = await supabase.from("tenants" as any).select("*", { count: "exact", head: true }); results.totalTenants = r.count ?? 0; } catch {}
       try { const r = await supabase.from("tenants" as any).select("*", { count: "exact", head: true }).eq("is_active", true); results.activeTenants = r.count ?? 0; } catch {}
-      try { const r = await supabase.from("profiles").select("*", { count: "exact", head: true }); results.totalUsers = r.count ?? 0; } catch {}
+      try { const r = await supabase.from("profiles").select("*", { count: "exact", head: true }).not("tenant_id", "is", null); results.totalUsers = r.count ?? 0; } catch {}
       try { const r = await supabase.from("invoices").select("*", { count: "exact", head: true }); results.totalInvoices = r.count ?? 0; } catch {}
       try { const r = await supabase.from("receipts").select("*", { count: "exact", head: true }); results.totalReceipts = r.count ?? 0; } catch {}
       try { const r = await supabase.from("documents").select("*", { count: "exact", head: true }); results.totalDocuments = r.count ?? 0; } catch {}

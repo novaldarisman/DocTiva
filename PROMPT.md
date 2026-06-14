@@ -1,383 +1,303 @@
-# GENERAL PROMPT – TRANSFORM DOCTIVA INTO MULTI-TENANT PLATFORM
+# GENERAL PROMPT – CENTRALIZED TEMPLATE MANAGEMENT FOR DOCTIVA
 
-Lakukan transformasi arsitektur DocTiva dari sistem administrasi single-company menjadi platform multi-tenant yang dapat digunakan oleh banyak perusahaan, lembaga pelatihan, maupun organisasi secara bersamaan.
+Ubah konsep pengelolaan template pada DocTiva menjadi sistem Template Management terpusat.
 
-Tujuan utama transformasi ini adalah agar setiap perusahaan memiliki lingkungan kerja masing-masing tanpa tercampur dengan perusahaan lain, namun tetap menggunakan satu aplikasi DocTiva yang sama.
+Tujuan:
 
----
+Seluruh template perusahaan diunggah satu kali pada awal implementasi dan dapat digunakan berulang kali oleh seluruh pengguna tenant sesuai hak aksesnya.
 
-# PRINSIP UTAMA
-
-Implementasikan arsitektur multi-tenant tanpa mengubah pengalaman pengguna yang sudah ada.
-
-Pertahankan:
-
-* Desain UI
-* Layout
-* Navigasi
-* Struktur menu
-* Warna
-* Komponen
-* Workflow
-* Pengalaman pengguna
-
-Perubahan hanya dilakukan pada:
-
-* Arsitektur data
-* Autentikasi
-* Otorisasi
-* Isolasi tenant
-* Branding tenant
-* Pengaturan tenant
-
-Seluruh fitur yang sudah ada harus tetap berjalan seperti sebelumnya.
+Pengguna tidak perlu membuat atau mengedit template setiap kali membuat dokumen.
 
 ---
 
-# ARSITEKTUR PLATFORM
+# LOKASI MENU
 
-DocTiva memiliki 2 level utama:
+Pindahkan seluruh pengaturan template ke:
 
-## 1. PLATFORM
+Pengaturan
+└── Template Management
 
-Pemilik aplikasi DocTiva.
+Submenu:
 
-Hanya digunakan oleh owner DocTiva.
+* Template Invoice
+* Template Kwitansi
+* Template Surat Menyurat
 
-Tidak digunakan untuk operasional perusahaan.
+Hanya Tenant Super Admin yang dapat mengelola template.
 
-Berfungsi untuk mengelola tenant.
-
----
-
-## 2. TENANT
-
-Perusahaan, lembaga pelatihan, organisasi, atau unit bisnis yang menggunakan DocTiva.
-
-Contoh:
-
-* PT Activa
-* PT ABC
-* PT XYZ
-* SMK Ekonomika
-* Kelas Pelatihan Batch 1
-* Kelas Pelatihan Batch 2
-
-Setiap tenant memiliki data yang terpisah sepenuhnya.
+Pengguna biasa hanya dapat menggunakan template yang tersedia.
 
 ---
 
-# PLATFORM SUPER ADMIN
+# KONSEP TEMPLATE
 
-Buat role khusus:
+Template merupakan aset perusahaan.
 
-Platform Super Admin
+Template diunggah satu kali dan digunakan berkali-kali.
 
-Role ini hanya dimiliki oleh pemilik DocTiva.
+Satu tenant dapat memiliki banyak template.
 
-Platform Super Admin TIDAK memiliki menu:
+Template antar tenant harus terisolasi.
 
-* Pelanggan
-* Invoice
-* Kwitansi
-* Surat Menyurat
-* Arsip Operasional
-
-Karena Platform Super Admin bukan pengguna operasional.
+Tenant tidak dapat melihat template milik tenant lain.
 
 ---
 
-# MENU PLATFORM SUPER ADMIN
+# TEMPLATE INVOICE
 
-Tampilkan menu berikut:
+Tambahkan menu:
 
-Dashboard Platform
+Pengaturan
+→ Template Management
+→ Template Invoice
 
-Tenant Management
+Fitur:
 
-Statistik Platform
+* Upload Template Baru
+* Edit Informasi Template
+* Aktifkan Template
+* Nonaktifkan Template
+* Duplikasi Template
+* Hapus Template
+* Preview Template
+* Set sebagai Default
 
-Pengaturan Platform
+Format file yang didukung:
 
-Audit Platform
-
-Profil Saya
-
----
-
-# DASHBOARD PLATFORM
-
-Tampilkan informasi:
-
-* Total Tenant
-* Tenant Aktif
-* Tenant Nonaktif
-* Total Pengguna
-* Total Invoice Seluruh Tenant
-* Total Kwitansi Seluruh Tenant
-* Total Dokumen Surat Menyurat
-* Total Penyimpanan Digunakan
-
-Grafik:
-
-* Pertumbuhan Tenant
-* Aktivitas Tenant
-* Tenant Teraktif
-
-Dashboard ini hanya bersifat agregasi.
-
-Tidak menampilkan detail isi invoice tenant.
-
----
-
-# TENANT MANAGEMENT
-
-Platform Super Admin dapat:
-
-* Membuat Tenant Baru
-* Mengubah Tenant
-* Menonaktifkan Tenant
-* Mengaktifkan Tenant
-* Menghapus Tenant
-* Melihat Detail Tenant
-
-Field Tenant:
-
-* Nama Tenant
-* Jenis Tenant
-* Nama Perusahaan/Lembaga
-* Logo
-* Email
-* Nomor Telepon
-* Alamat
-* NPWP (opsional)
-* Status
-* Tanggal Aktivasi
-
-Jenis Tenant:
-
-* Perusahaan
-* Pelatihan
-* Sekolah
-* Organisasi
-* Lainnya
-
----
-
-# PEMBUATAN TENANT
-
-Saat membuat tenant baru, sistem otomatis membuat:
-
-Tenant Super Admin
+* DOCX
+* PDF (preview/reference only)
 
 Field:
 
-* Nama Lengkap
-* Email
-* Password
-* Jabatan
+* Nama Template
+* Deskripsi
+* Status Aktif
+* Template Default
+* Versi Template
 
-Role otomatis:
-
-Tenant Super Admin
-
-Status:
-
-Aktif
-
----
-
-# PLATFORM AUDIT TRAIL
-
-Catat aktivitas:
-
-* Membuat Tenant
-* Mengubah Tenant
-* Menonaktifkan Tenant
-* Mengaktifkan Tenant
-* Menghapus Tenant
-* Reset Password Tenant Super Admin
-
-Audit hanya dapat diakses Platform Super Admin.
-
----
-
-# TENANT SUPER ADMIN
-
-Setiap tenant memiliki role tertinggi sendiri.
-
-Role:
-
-Tenant Super Admin
-
-Dapat mengakses:
-
-* Dashboard
-* Pelanggan
-* Invoice
-* Kwitansi
-* Surat Menyurat
-* Arsip
-* Pengaturan
-
-Dapat mengelola pengguna tenant.
-
-Tidak dapat mengakses Platform.
-
----
-
-# MULTI-TENANT DATA ISOLATION
-
-Seluruh data operasional harus terisolasi berdasarkan tenant.
-
-Data yang wajib dipisahkan:
-
-* Users
-* Customers
-* Invoices
-* Invoice Items
-* Receipts
-* Documents
-* Templates
-* Audit Logs
-* Settings
-* Archives
-
-Tambahkan tenant_id pada seluruh tabel operasional.
-
-Pengguna hanya dapat melihat data milik tenantnya sendiri.
-
-Tidak boleh ada kebocoran data antar tenant.
-
----
-
-# LOGIN
-
-Seluruh pengguna login melalui halaman yang sama.
+Satu tenant dapat memiliki banyak template invoice.
 
 Contoh:
 
-doctiva.id/login
+* Invoice Standar
+* Invoice Pelatihan
+* Invoice Konsultan
+* Invoice Creative Agency
 
-Form Login:
+Saat membuat invoice:
 
-* Email
-* Password
-* Remember Me
-* Forgot Password
+Pengguna memilih template yang ingin digunakan.
 
-Tidak ada fitur registrasi mandiri.
-
----
-
-# PROSES LOGIN
-
-Setelah login berhasil:
-
-Sistem menentukan:
-
-1. Role pengguna
-2. Tenant pengguna
-
-Jika role adalah Platform Super Admin:
-
-Arahkan ke Dashboard Platform.
-
-Jika role adalah Tenant:
-
-Arahkan ke Dashboard Tenant masing-masing.
+Jika tidak memilih, sistem menggunakan template default.
 
 ---
 
-# IDENTITAS TENANT
+# TEMPLATE KWITANSI
 
-Pertahankan tampilan DocTiva yang sudah ada.
-
-Tambahkan identitas tenant.
-
-Tampilkan pada header:
-
-* Logo Tenant
-* Nama Tenant
-* Nama Pengguna
-* Jabatan
-
-Logo dan nama tenant berubah otomatis sesuai akun yang login.
-
----
-
-# PENGALAMAN PENGGUNA TENANT
-
-Pengguna tenant tetap melihat tampilan yang sama seperti sebelumnya.
-
-Menu tetap:
-
-Dashboard
-
-Pelanggan
-
-Invoice
-
-Kwitansi
-
-Surat Menyurat
-
-Arsip
+Tambahkan menu:
 
 Pengaturan
+→ Template Management
+→ Template Kwitansi
 
-Tidak ada perubahan besar pada desain.
+Fitur sama seperti Template Invoice.
 
-Tidak ada redesign UI.
+Contoh:
 
-Workflow tetap sama.
+* Kwitansi Standar
+* Kwitansi Pelatihan
+* Kwitansi Event
 
----
+Mendukung DOCX.
 
-# DUKUNGAN UNTUK PELATIHAN
-
-Tenant jenis Pelatihan dapat digunakan untuk:
-
-* Batch Pelatihan
-* Simulasi
-* Ujian
-* Workshop
-
-Data peserta tidak bercampur dengan tenant lain.
-
-Pengguna pelatihan dapat menggunakan seluruh fitur sesuai role yang diberikan.
+Saat generate PDF, desain mengikuti template yang dipilih.
 
 ---
 
-# DATABASE BARU
+# TEMPLATE SURAT MENYURAT
 
-Tambahkan tabel:
+Tambahkan menu:
 
-platform_users
+Pengaturan
+→ Template Management
+→ Template Surat Menyurat
 
-tenants
+Sistem berbasis upload Word.
 
-tenant_types
+Fitur:
 
-tenant_subscriptions
+* Upload Template DOCX
+* Preview Template
+* Aktifkan/Nonaktifkan
+* Set Default
+* Duplikasi
+* Hapus
+* Download Template Asli
 
-platform_audit_logs
+Satu tenant dapat memiliki banyak template surat.
 
-Perbarui seluruh tabel operasional dengan field:
+Contoh:
 
-tenant_id
+MOU:
+
+* MOU Pelatihan
+* MOU Konsultan
+
+SPK:
+
+* SPK Vendor
+* SPK Proyek
+
+NDA:
+
+* NDA Umum
+* NDA Creative
+
+Surat Penawaran:
+
+* Penawaran Pelatihan
+* Penawaran Konsultan
 
 ---
 
-# KEAMANAN
+# TEMPLATE PLACEHOLDER
 
-Pastikan:
+Semua template DOCX mendukung placeholder.
 
-* Tenant tidak dapat mengakses data tenant lain.
-* Platform Super Admin tidak dapat melihat isi detail dokumen tenant secara langsung.
-* Password disimpan menggunakan hash yang aman.
-* Session terisolasi.
-* Audit Trail aktif.
+Contoh:
+
+{{nomor_dokumen}}
+
+{{tanggal}}
+
+{{nama_perusahaan}}
+
+{{alamat_perusahaan}}
+
+{{nama_pelanggan}}
+
+{{nama_pic}}
+
+{{jabatan_pic}}
+
+{{nominal}}
+
+{{terbilang}}
+
+{{tanggal_jatuh_tempo}}
+
+{{catatan}}
+
+Placeholder dapat digunakan pada:
+
+* Header
+* Footer
+* Isi paragraf
+* Tabel
+* Area tanda tangan
+
+---
+
+# TEMPLATE DEFAULT
+
+Setiap kategori template harus memiliki satu template default.
+
+Kategori:
+
+* Invoice
+* Kwitansi
+* Surat Menyurat
+
+Jika pengguna tidak memilih template saat membuat dokumen, sistem otomatis menggunakan template default.
+
+---
+
+# TEMPLATE VERSIONING
+
+Tambahkan fitur versi.
+
+Setiap perubahan template menghasilkan versi baru.
+
+Contoh:
+
+Invoice Standar v1
+
+Invoice Standar v2
+
+Invoice Standar v3
+
+Dokumen lama tetap menggunakan template versi saat dokumen dibuat.
+
+Tidak berubah mengikuti template terbaru.
+
+---
+
+# PENGGUNAAN TEMPLATE
+
+Saat membuat Invoice:
+
+Pilih Template Invoice
+↓
+Isi data
+↓
+Generate DOCX
+↓
+Generate PDF
+
+Saat membuat Kwitansi:
+
+Pilih Template Kwitansi
+↓
+Isi data
+↓
+Generate DOCX
+↓
+Generate PDF
+
+Saat membuat Surat:
+
+Pilih Template Surat
+↓
+Isi data
+↓
+Generate DOCX
+↓
+Generate PDF
+
+Pengalaman pengguna harus tetap semudah seperti sebelumnya.
+
+---
+
+# ARSIP TEMPLATE
+
+Simpan metadata:
+
+* Tenant
+* Nama Template
+* Jenis Template
+* Versi
+* Status
+* Default
+* Tanggal Upload
+* Uploaded By
+
+Simpan file asli DOCX.
+
+---
+
+# AUDIT TRAIL
+
+Catat aktivitas:
+
+* Upload Template
+* Update Template
+* Aktivasi Template
+* Menjadikan Default
+* Download Template
+* Hapus Template
+* Generate Dokumen menggunakan Template
+
+Audit hanya dapat dilihat oleh Tenant Super Admin.
 
 ---
 
@@ -385,15 +305,14 @@ Pastikan:
 
 Fitur dianggap selesai apabila:
 
-* DocTiva berubah menjadi platform multi-tenant.
-* Platform Super Admin tersedia.
-* Platform Super Admin tidak memiliki fitur operasional seperti Invoice atau Kwitansi.
-* Platform Super Admin dapat mengelola tenant.
-* Tenant otomatis memiliki Tenant Super Admin.
-* Seluruh tenant memiliki data terisolasi.
-* Pengguna tetap login melalui halaman yang sama.
-* Dashboard tenant tetap seperti sebelumnya.
-* Desain dan pengalaman pengguna tidak berubah.
-* Logo dan nama tenant tampil otomatis sesuai tenant yang login.
-* Seluruh fitur operasional tetap berjalan normal.
-* Sistem dapat digunakan secara bersamaan oleh banyak perusahaan maupun pelatihan tanpa pencampuran data.
+* Template dikelola melalui Pengaturan.
+* Invoice, Kwitansi, dan Surat Menyurat menggunakan konsep yang sama.
+* Template cukup diunggah satu kali.
+* Tenant dapat memiliki banyak template.
+* Tersedia template default untuk setiap kategori.
+* Template mendukung format DOCX.
+* Placeholder bekerja otomatis.
+* PDF dan DOCX hasil generate mengikuti template yang dipilih.
+* Template antar tenant terisolasi.
+* Dokumen lama tetap mempertahankan versi template saat dibuat.
+* Tidak diperlukan pembuatan template manual di dalam aplikasi.

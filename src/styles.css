@@ -65,48 +65,48 @@
   --radius: 1rem;
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
 
-  /* Brand palette: navy + emerald on white */
-  --background: oklch(0.99 0.005 247);
-  --foreground: oklch(0.18 0.04 260);
+  /* DocTiva Brand - Clean Corporate Technology */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.15 0.04 260);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.04 260);
+  --card-foreground: oklch(0.15 0.04 260);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.04 260);
+  --popover-foreground: oklch(0.15 0.04 260);
 
-  /* Navy primary */
-  --primary: oklch(0.27 0.07 260);
-  --primary-foreground: oklch(0.99 0.005 247);
+  /* Primary Blue #0014B1 */
+  --primary: oklch(0.28 0.22 264);
+  --primary-foreground: oklch(1 0 0);
 
-  /* Emerald accent */
-  --accent: oklch(0.72 0.14 165);
-  --accent-foreground: oklch(0.18 0.04 260);
+  /* Secondary Blue #2385E4 */
+  --accent: oklch(0.56 0.18 252);
+  --accent-foreground: oklch(1 0 0);
 
-  --secondary: oklch(0.97 0.01 250);
-  --secondary-foreground: oklch(0.27 0.07 260);
-  --muted: oklch(0.97 0.01 250);
+  --secondary: oklch(0.97 0.005 250);
+  --secondary-foreground: oklch(0.28 0.22 264);
+  --muted: oklch(0.97 0.005 250);
   --muted-foreground: oklch(0.5 0.03 257);
-  --destructive: oklch(0.6 0.22 27);
-  --destructive-foreground: oklch(0.99 0.005 247);
-  --border: oklch(0.93 0.01 255);
-  --input: oklch(0.93 0.01 255);
-  --ring: oklch(0.27 0.07 260);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  --destructive: oklch(0.55 0.22 27);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.92 0.01 255);
+  --input: oklch(0.92 0.01 255);
+  --ring: oklch(0.28 0.22 264);
+  --chart-1: oklch(0.28 0.22 264);
+  --chart-2: oklch(0.56 0.18 252);
+  --chart-3: oklch(0.82 0.10 183);
+  --chart-4: oklch(0.65 0.15 80);
+  --chart-5: oklch(0.5 0.03 257);
 
-  /* Sidebar: deep navy */
-  --sidebar: oklch(0.22 0.05 260);
-  --sidebar-foreground: oklch(0.95 0.01 250);
-  --sidebar-primary: oklch(0.72 0.14 165);
-  --sidebar-primary-foreground: oklch(0.18 0.04 260);
-  --sidebar-accent: oklch(0.28 0.06 260);
-  --sidebar-accent-foreground: oklch(0.99 0.005 247);
-  --sidebar-border: oklch(0.3 0.04 260);
-  --sidebar-ring: oklch(0.72 0.14 165);
+  /* Sidebar: White Elevated (Coretax-style) */
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.25 0.02 260);
+  --sidebar-primary: oklch(0.28 0.22 264);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.96 0.02 255);
+  --sidebar-accent-foreground: oklch(0.28 0.22 264);
+  --sidebar-border: oklch(0.90 0.02 255);
+  --sidebar-ring: oklch(0.28 0.22 264);
 
-  --shadow-card: 0 1px 2px oklch(0.18 0.04 260 / 0.04), 0 4px 16px oklch(0.18 0.04 260 / 0.06);
+  --shadow-card: 0 1px 3px oklch(0.15 0.04 260 / 0.04), 0 4px 12px oklch(0.15 0.04 260 / 0.05);
 }
 
 .dark {
@@ -160,4 +160,11 @@
   h1, h2, h3, h4 {
     letter-spacing: -0.02em;
   }
+}
+
+
+/* Sidebar elevation */
+[data-sidebar="sidebar"] {
+  box-shadow: 2px 0 12px oklch(0.15 0.04 260 / 0.06), 0 0 1px oklch(0.15 0.04 260 / 0.04);
+  z-index: 10;
 }

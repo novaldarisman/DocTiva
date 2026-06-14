@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import type { Tables, Database } from "@/integrations/supabase/types";
 import { terbilang } from "@/lib/terbilang";
 import { buildInvoicePdf, triggerDownload, type InvoiceTemplate } from "@/lib/invoice-pdf";
+import { useTenantId } from "@/lib/use-tenant-id";
 import { useSettings } from "@/lib/settings";
 import { archivePdf } from "@/lib/archive";
 import { logAudit } from "@/lib/audit";
@@ -75,6 +76,7 @@ function computeItem(it: ItemForm) {
 
 function InvoicePage() {
   const qc = useQueryClient();
+  const tenantId = useTenantId();
   const { data: settings } = useSettings();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -303,7 +305,7 @@ function InvoicePage() {
                 <TableHead>Tanggal</TableHead>
                 <TableHead>Jatuh Tempo</TableHead>
                 <TableHead className="text-right">Total</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead className="text-center">Status</TableHead>
                 <TableHead className="text-right">Aksi</TableHead>
               </TableRow>
             </TableHeader>

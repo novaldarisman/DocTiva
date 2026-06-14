@@ -225,7 +225,7 @@ function PelangganPage() {
                 <TableHead>Email</TableHead>
                 <TableHead>Telepon</TableHead>
                 <TableHead>PIC</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead className="text-center">Status</TableHead>
                 <TableHead className="text-right">Aksi</TableHead>
               </TableRow>
             </TableHeader>

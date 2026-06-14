@@ -32,6 +32,8 @@ import { toast } from "sonner";
 import type { Tables, Database } from "@/integrations/supabase/types";
 import { archivePdf } from "@/lib/archive";
 import { buildDocumentPdf, triggerDownload } from "@/lib/surat-pdf";
+import { useTenantId } from "@/lib/use-tenant-id";
+import { useDocxGenerate } from "@/lib/use-docx-generate";
 import { logAudit } from "@/lib/audit";
 import { useMyRoles } from "@/lib/use-role";
 
@@ -107,11 +109,22 @@ function applyPlaceholders(content: string, doc: any, cust?: Customer | null, se
 
 function SuratPage() {
   const qc = useQueryClient();
+  const tenantId = useTenantId();
+  const { generateAndDownload } = useDocxGenerate();
+
+  const { data: letterTemplates } = useQuery({
+    queryKey: ["letter-templates", tenantId],
+    queryFn: async () => {
+      const { data } = await supabase.from("templates" as any).select("*").eq("tenant_id", tenantId).eq("category", "letter").eq("is_active", true).order("is_default", { ascending: false });
+      return data as any[];
+    },
+    enabled: !!tenantId,
+  });
   const { data: me } = useMyRoles();
   const roles = me?.roles ?? [];
   const isSuperAdmin = roles.includes("super_admin");
-  const canManage = roles.some((r) => ["super_admin", "owner", "admin_keuangan"].includes(r));
-  const canDelete = roles.some((r) => ["super_admin", "owner"].includes(r));
+  const canManage = roles.some((r) => ["super_admin", "owner", "admin_keuangan", "tenant_super_admin"].includes(r));
+  const canDelete = roles.some((r) => ["super_admin", "owner", "tenant_super_admin"].includes(r));
 
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -319,6 +332,29 @@ function SuratPage() {
   });
 
   // ===== PDF DOWNLOAD =====
+  const downloadDocx = async (doc: Document) => {
+    const tpl = letterTemplates?.find((t: any) => t.is_default) || letterTemplates?.[0];
+    if (!tpl) return toast.error("Tidak ada template DOCX. Upload template di Pengaturan > Template Management.");
+    const cust = customers?.find((c) => c.id === doc.customer_id);
+    await generateAndDownload({
+      templatePath: tpl.file_path,
+      data: {
+        nomor_dokumen: doc.document_number,
+        tanggal: fmtDate(doc.document_date),
+        judul: doc.title,
+        nama_perusahaan: appSettings?.company_name ?? "",
+        alamat_perusahaan: appSettings?.company_address ?? "",
+        nama_pelanggan: cust?.nama_pelanggan ?? "",
+        alamat_pelanggan: cust?.alamat ?? "",
+        nama_pic: cust?.pic ?? "",
+        jabatan_pic: "",
+        konten: doc.content,
+      },
+      tenantId: tenantId!,
+      fileName: doc.document_number + ".docx",
+    });
+  };
+
   const downloadPdf = async (doc: Document) => {
     try {
       const cust = customers?.find((c) => c.id === doc.customer_id);
@@ -477,7 +513,7 @@ function SuratPage() {
                 <TableHead>Jenis</TableHead>
                 <TableHead>Pelanggan</TableHead>
                 <TableHead>Tanggal</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead className="text-center">Status</TableHead>
                 <TableHead className="w-[120px]">Aksi</TableHead>
               </TableRow>
             </TableHeader>
@@ -501,13 +537,16 @@ function SuratPage() {
                       <TableCell><Badge variant="outline" className="text-xs">{dt?.name ?? "\u2014"}</Badge></TableCell>
                       <TableCell className="max-w-[160px] truncate">{cust?.nama_pelanggan ?? "\u2014"}</TableCell>
                       <TableCell className="text-sm">{fmtDate(doc.document_date)}</TableCell>
-                      <TableCell><Badge className={`text-xs ${sm.tone}`}>{sm.label}</Badge></TableCell>
+                      <TableCell><div className="flex justify-center"><Badge className={`text-xs ${sm.tone}`}>{sm.label}</Badge></div></TableCell>
                       <TableCell>
                         <div className="flex gap-1">
                           <Button variant="ghost" size="icon" title="Preview" onClick={() => setPreviewId(doc.id)}>
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" title="Download PDF" onClick={() => downloadPdf(doc)}>
+                          <Button variant="ghost" size="icon" title="Download DOCX" onClick={() => downloadDocx(doc)}>
+                          <FileText className="h-4 w-4 text-blue-500" />
+                        </Button>
+                        <Button variant="ghost" size="icon" title="Download PDF" onClick={() => downloadPdf(doc)}>
                             <Download className="h-4 w-4" />
                           </Button>
                           {canManage && (

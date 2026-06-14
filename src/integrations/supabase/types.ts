@@ -890,6 +890,7 @@ export type Database = {
         | "jatuh_tempo"
         | "dibatalkan"
       document_status: "draft" | "aktif" | "selesai" | "berakhir" | "dibatalkan"
+      template_category: "invoice" | "receipt" | "letter"
       receipt_status: "draft" | "final" | "dibatalkan"
     }
     CompositeTypes: {
@@ -1028,6 +1029,7 @@ export const Constants = {
         "dibatalkan",
       ],
       document_status: ["draft", "aktif", "selesai", "berakhir", "dibatalkan"],
+      template_category: ["invoice", "receipt", "letter"],
       receipt_status: ["draft", "final", "dibatalkan"],
     },
   },

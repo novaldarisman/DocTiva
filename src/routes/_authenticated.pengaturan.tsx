@@ -18,6 +18,7 @@ import { useSettings } from "@/lib/settings";
 import { useMyRoles } from "@/lib/use-role";
 import { ProfileTab } from "@/components/pengaturan/ProfileTab";
 import { UsersTab } from "@/components/pengaturan/UsersTab";
+import { TemplateTab } from "@/components/pengaturan/TemplateTab";
 
 export const Route = createFileRoute("/_authenticated/pengaturan")({
   ssr: false,
@@ -58,7 +59,8 @@ function PengaturanPage() {
           {isSuper && <TabsTrigger value="users">Manajemen Pengguna</TabsTrigger>}
           <TabsTrigger value="roles">Jabatan</TabsTrigger>
           <TabsTrigger value="pdf">Template PDF</TabsTrigger>
-          <TabsTrigger value="audit">Audit Trail</TabsTrigger>
+          <TabsTrigger value="templates">Template Management</TabsTrigger>
+            <TabsTrigger value="audit">Audit Trail</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile"><ProfileTab /></TabsContent>
@@ -66,7 +68,8 @@ function PengaturanPage() {
         {isSuper && <TabsContent value="users"><UsersTab /></TabsContent>}
         <TabsContent value="roles"><RolesTab /></TabsContent>
         <TabsContent value="pdf"><CompanyTab section="pdf" /></TabsContent>
-        <TabsContent value="audit"><AuditTab /></TabsContent>
+        <TabsContent value="templates"><TemplateTab /></TabsContent>
+          <TabsContent value="audit"><AuditTab /></TabsContent>
       </Tabs>
     </div>
   );
@@ -117,7 +120,7 @@ function CompanyTab({ section }: { section: "company" | "pdf" }) {
         signature_url: form.signature_url ?? null,
         stamp_url: form.stamp_url ?? null,
         signer_name: form.signer_name ?? null,
-      }).eq("id", s.id);
+      } as any).eq("id", s.id);
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["app_settings"] }); toast.success("Pengaturan disimpan"); },
@@ -184,7 +187,7 @@ function CompanyTab({ section }: { section: "company" | "pdf" }) {
                 </SelectContent>
               </Select>
             </div>
-          </div>
+            </div>
           <div className="border-t pt-5 grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-2">
               <Label>Tanda Tangan Digital</Label>

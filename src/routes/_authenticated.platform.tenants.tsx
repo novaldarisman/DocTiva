@@ -3,7 +3,7 @@ import React, { useState, useRef } from "react";
 import * as XLSX from "xlsx";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { createTenantAdminFn, resetTenantPasswordFn, getTenantUsersFn, deleteTenantUserFn, resetUserPasswordFn, updateTenantAdminFn } from "@/lib/api/tenant.functions";
+import { createTenantAdminFn, resetTenantPasswordFn, getTenantUsersFn, deleteTenantUserFn, resetUserPasswordFn, updateTenantAdminFn, deleteTenantWithUsersFn } from "@/lib/api/tenant.functions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Loader2, Building2, Search, Upload, Download, Users, UserPlus, KeyRound } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Building2, Search, Upload, Download, Users, UserPlus, KeyRound, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/platform/tenants")({
@@ -49,6 +49,8 @@ function TenantManagementPage() {
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [resetUserId, setResetUserId] = useState<string | null>(null);
   const [resetPassword, setResetPassword] = useState("");
+  const [showResetPw, setShowResetPw] = useState(false);
+  const [showAdminPw, setShowAdminPw] = useState(false);
 
   const { data: tenants, isLoading } = useQuery({
     queryKey: ["tenants"],
@@ -162,9 +164,9 @@ function TenantManagementPage() {
   const deleteMutation = useMutation({
     mutationFn: async () => {
       if (!deleteId) return;
-      await supabase.from("tenants" as any).delete().eq("id", deleteId);
+      await deleteTenantWithUsersFn({ data: { tenantId: deleteId } });
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["tenants"] }); toast.success("Tenant dihapus"); setDeleteId(null); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["tenants"] }); toast.success("Tenant dan semua pengguna dihapus"); setDeleteId(null); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -419,7 +421,14 @@ function TenantManagementPage() {
                 <div><Label>Nama Lengkap</Label><Input value={adminFullName} onChange={(e) => setAdminFullName(e.target.value)} /></div>
                 <div><Label>Email</Label><Input type="email" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} /></div>
               </div>
-              <div><Label>{editing ? "Password Baru" : "Password"}</Label><Input type="password" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} placeholder="Min. 6 karakter" /></div>
+              <div><Label>{editing ? "Password Baru" : "Password"}</Label>
+              <div className="relative">
+                <Input type={showAdminPw ? "text" : "password"} value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} placeholder="Min. 6 karakter" className="pr-10" />
+                <button type="button" onClick={() => setShowAdminPw(!showAdminPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  {showAdminPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
             </div>
 
             <DialogFooter>
@@ -507,7 +516,14 @@ function TenantManagementPage() {
               <div className="grid grid-cols-3 gap-3">
                 <div><Label className="text-xs">Nama</Label><Input value={userForm.full_name} onChange={(e) => setUserForm({ ...userForm, full_name: e.target.value })} placeholder="Nama lengkap" /></div>
                 <div><Label className="text-xs">Email *</Label><Input type="email" value={userForm.email} onChange={(e) => setUserForm({ ...userForm, email: e.target.value })} placeholder="email@domain.com" /></div>
-                <div><Label className="text-xs">Password *</Label><Input type="password" value={userForm.password} onChange={(e) => setUserForm({ ...userForm, password: e.target.value })} placeholder="Min. 6 karakter" /></div>
+                <div><Label className="text-xs">Password *</Label>
+                <div className="relative">
+                  <Input type={showResetPw ? "text" : "password"} value={userForm.password} onChange={(e) => setUserForm({ ...userForm, password: e.target.value })} placeholder="Min. 6 karakter" className="pr-8" />
+                  <button type="button" onClick={() => setShowResetPw(!showResetPw)} className="absolute right-2 top-1/2 -translate-y-1/2">
+                    {showResetPw ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                  </button>
+                </div>
+              </div>
               </div>
               <Button size="sm" onClick={() => addUserMutation.mutate()} disabled={addUserMutation.isPending}>
                 {addUserMutation.isPending && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
@@ -551,7 +567,12 @@ function TenantManagementPage() {
                           <TableCell colSpan={4} className="bg-muted/20">
                             <div className="flex items-center gap-2 py-1">
                               <Label className="text-xs shrink-0">Password Baru:</Label>
-                              <Input type="password" className="h-8 text-sm w-48" value={resetPassword} onChange={(e) => setResetPassword(e.target.value)} placeholder="Min. 6 karakter" />
+                              <div className="relative">
+                              <Input type={showResetPw ? "text" : "password"} className="h-8 text-sm w-48 pr-8" value={resetPassword} onChange={(e) => setResetPassword(e.target.value)} placeholder="Min. 6 karakter" />
+                              <button type="button" onClick={() => setShowResetPw(!showResetPw)} className="absolute right-2 top-1/2 -translate-y-1/2">
+                                {showResetPw ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                              </button>
+                            </div>
                               <Button size="sm" onClick={() => resetUserPasswordMutation.mutate(u.id)} disabled={resetUserPasswordMutation.isPending}>
                                 {resetUserPasswordMutation.isPending && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
                                 Simpan

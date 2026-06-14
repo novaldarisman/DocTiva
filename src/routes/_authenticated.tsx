@@ -65,11 +65,11 @@ function AuthenticatedLayout() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
+      <div className="min-h-screen flex w-full bg-white">
         <Sidebar collapsible="icon">
           <SidebarHeader className="border-b border-sidebar-border">
             <div className="flex items-center gap-2 px-2 py-2">
-              <img src="/logo.svg" alt="DocTiva" className="h-9 w-9 rounded-xl shrink-0" />
+              <img src="/favicon-doctiva.png" alt="DocTiva" className="h-9 w-9 rounded-xl shrink-0" />
               <div className="flex flex-col group-data-[collapsible=icon]:hidden">
                 <span className="font-semibold text-sidebar-foreground tracking-tight">DocTiva</span>
                 <span className="text-[10px] text-sidebar-foreground/60 uppercase tracking-wider">
@@ -83,7 +83,7 @@ function AuthenticatedLayout() {
               <SidebarGroupContent>
                 <SidebarMenu>
                   {visible.map((item) => {
-                    const active = pathname === item.url || pathname.startsWith(item.url + "/");
+                    const active = item.url === "/platform" ? pathname === "/platform" || pathname === "/platform/" : pathname === item.url || pathname.startsWith(item.url + "/");
                     return (
                       <SidebarMenuItem key={item.url}>
                         <SidebarMenuButton asChild isActive={active} tooltip={item.title}>
@@ -111,8 +111,8 @@ function AuthenticatedLayout() {
           </SidebarFooter>
         </Sidebar>
 
-        <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 flex items-center gap-3 px-4 border-b bg-card/50 backdrop-blur sticky top-0 z-10">
+        <div className="flex-1 flex flex-col min-w-0 bg-slate-100">
+          <header className="h-14 flex items-center gap-3 px-4 border-b bg-white backdrop-blur sticky top-0 z-10">
             <SidebarTrigger />
             <div className="flex items-center gap-2 min-w-0 flex-1">
               {tenant?.logo_url && <img src={tenant.logo_url} alt={tenant.name} className="h-6 w-6 rounded object-contain" />}
